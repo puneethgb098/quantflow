@@ -11,4 +11,4 @@ The **QuantFlow** App is a powerful tool built with Streamlit to help traders ba
 - **Risk Management**
 
 
-## IN PROCESS
+## APP IN PROCESS
