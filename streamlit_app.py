@@ -43,38 +43,38 @@ class Strategies:
 
         fig.add_trace(go.Scatter(x=self.price_data.index, y=self.price_data['Close'], name='Close Price', line=dict(color='blue')))
 
-        fig.add_trace( go.Scatter(x=self.price_data.index, y=self.price_data['Short_SMA'], name='Short SMA',line=dict(color='red', dash='dot'),))
+        fig.add_trace(go.Scatter(x=self.price_data.index,y=self.price_data['Short_SMA'],name='Short SMA',line=dict(color='red', dash='dot')))
 
-        fig.add_trace( go.Scatter(x=self.price_data.index,y=self.price_data['Long_SMA'],name='Long SMA',line=dict(color='green')))
+        fig.add_trace(go.Scatter(x=self.price_data.index,y=self.price_data['Long_SMA'],name='Long SMA',line=dict(color='green', dash='dot')))
 
         buy_signals = self.price_data[self.price_data['Signal'] == 1]
-        fig.add_trace(go.Scatter( x=buy_signals.index,y=buy_signals['Close'], mode='markers',name='Buy Signal',marker=dict(color='green', size=10, symbol='triangle-up'),))
+        fig.add_trace(go.Scatter(x=buy_signals.index,y=buy_signals['Close'],mode='markers',name='Buy Signal',marker=dict(color='green', size=10, symbol='triangle-up')))
+
         sell_signals = self.price_data[self.price_data['Signal'] == -1]
-        fig.add_trace(go.Scatter( x=sell_signals.index, y=sell_signals['Close'], mode='markers',name='Sell Signal',marker=dict(color='red', size=10, symbol='triangle-down')))
+        fig.add_trace(go.Scatter(x=sell_signals.index, y=sell_signals['Close'],mode='markers',name='Sell Signal',marker=dict(color='red', size=10, symbol='triangle-down'),))
 
         fig.update_layout(xaxis_title="Date",yaxis_title="Price",legend_title="Legend",template="plotly_dark",)
 
         return fig
-
-
+    
 def fetch_nifty_data():
     data = yf.download("^NSEI", period="10y", interval="1d")
     return data
 
 
 def main():
+    st.title("Dual SMA Trading Strategy & Signals")
     st.sidebar.header("Strategy & Parameters")
     st.sidebar.selectbox("Pick a strategy",['Dual SMA',"Momentum strategy",'Mean Reversion'])
-    short_window = st.sidebar.number_input("Short SMA Window", min_value=1, max_value=50, value=5)
-    long_window = st.sidebar.number_input("Long SMA Window", min_value=1, max_value=200, value=21)
+    short_window = st.sidebar.number_input("Short SMA Window", min_value=1, max_value=100, value=5)
+    long_window = st.sidebar.number_input("Long SMA Window", min_value=1, max_value=365, value=21)
     price_data = fetch_nifty_data()
 
     if not price_data.empty:
         strategy = Strategies(price_data, long_sma=long_window, short_sma=short_window)
         strategy.run_strategy()
 
-        with st.container():
-            st.write("## Dual SMA Trading Strategy & Signals")
+        with st.container(border=True):
             fig = strategy.plot_results()
             st.plotly_chart(fig, use_container_width=True)
     else:
