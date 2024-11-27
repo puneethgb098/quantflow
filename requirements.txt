@@ -1,1 +1,8 @@
-streamlit
+streamlit==1.32.1
+numpy
+pandas
+plotly
+seaborn
+scipy
+requests
+yfinance
