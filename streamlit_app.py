@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import numpy as np
 
+
 class Strategies:
     def __init__(self, price_data, long_sma=200, short_sma=50, initial_capital=100000, transaction_cost=0.001):
         self.price_data = price_data.copy()
@@ -52,6 +53,7 @@ class Strategies:
         fig.add_trace(go.Scatter(x=sell_signals.index, y=sell_signals['Close'], mode='markers', name='Sell Signal', marker=dict(color='red', size=10, symbol='triangle-down')))
 
         fig.update_layout(
+            title="Dual EMA Strategy: Price and Signals",
             xaxis_title="Date",
             yaxis_title="Price",
             legend_title="Legend",
@@ -80,6 +82,7 @@ class Strategies:
             'Max Drawdown': max_drawdown
         }
 
+
 def fetch_nifty_data(years):
     end_date = datetime.today()
     start_date = end_date - relativedelta(years=years)
@@ -89,34 +92,33 @@ def fetch_nifty_data(years):
         return pd.DataFrame()
     return nifty_data.dropna()
 
-import streamlit as st
 
 def main():
-    performance = {
-        "Market Return": 0.1234,
-        "Volatility": 0.2567,
-        "Total Return": 0.3456,
-        "Sharpe Ratio": 1.23,
-        "Annualized Return": 0.4567,
-        "Max Drawdown": -0.1234,
-        "Example Metric": None  
-    }
-    st.title("Quantitative Trading Strategy Performance")
-    col1, col2, col3 = st.columns(3)
-    keys = list(performance.keys())
-    values = list(performance.values())
+    st.title("Dual EMA Trading Strategy & Signals")
+    st.sidebar.header("Strategy Parameters")
 
-    # Distribute metrics across columns
-    for i, col in enumerate([col1, col2, col3]):
-        for key, value in zip(keys[i::3], values[i::3]):  
-            if isinstance(value, (int, float)): 
-                formatted_value = (
-                    f"{value:.2%}" if 'Return' in key or key == 'Volatility' else f"{value:.2f}"
-                )
+    years = st.sidebar.number_input("Years of Historical Data", min_value=1, max_value=20, value=5, step=1)
+    transaction_cost = st.sidebar.number_input("Transaction Cost (%)", min_value=0.0, value=0.001, step=0.0001)
+    initial_capital = st.sidebar.number_input("Initial Capital", min_value=1000, value=100000, step=1000)
+    short_window = st.sidebar.number_input("Short EMA Window", min_value=1, max_value=100, value=50)
+    long_window = st.sidebar.number_input("Long EMA Window", min_value=1, max_value=365, value=200)
+
+    price_data = fetch_nifty_data(years)
+
+    if not price_data.empty:
+        strategy = Strategies(price_data, long_sma=long_window, short_sma=short_window, initial_capital=initial_capital, transaction_cost=transaction_cost)
+        strategy.run_strategy()
+
+        st.plotly_chart(strategy.plot_results(), use_container_width=True)
+
+        if st.button("Evaluate Strategy"):
+            performance = strategy.evaluate_performance()
+            if performance:
+                for key, value in performance.items():
+                    st.metric(key, f"{value:.2%}" if 'Return' in key or key == 'Volatility' else f"{value:.2f}")
             else:
-                formatted_value = "N/A" 
+                st.warning("Performance metrics could not be calculated. Please check your strategy parameters.")
 
-            col.metric(key, formatted_value)
 
 if __name__ == "__main__":
     main()
