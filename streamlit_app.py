@@ -89,28 +89,34 @@ def fetch_nifty_data(years):
         return pd.DataFrame()
     return nifty_data.dropna()
 
+import streamlit as st
+
 def main():
-    st.title("Advanced Dual EMA Trading Strategy & Signals")
-    st.sidebar.header("Strategy & Parameters")
+    performance = {
+        "Market Return": 0.1234,
+        "Volatility": 0.2567,
+        "Total Return": 0.3456,
+        "Sharpe Ratio": 1.23,
+        "Annualized Return": 0.4567,
+        "Max Drawdown": -0.1234,
+        "Example Metric": None  
+    }
+    st.title("Quantitative Trading Strategy Performance")
+    col1, col2, col3 = st.columns(3)
+    keys = list(performance.keys())
+    values = list(performance.values())
 
-    years = st.sidebar.number_input("Years of Historical Data", min_value=1, max_value=20, value=5, step=1)
-    transaction_cost = st.sidebar.number_input("Transaction cost", min_value=0.0, value=0.001, step=0.0001)
-    initial_capital = st.sidebar.number_input("Initial Capital", min_value=1000, value=100000, step=1000)
-    short_window = st.sidebar.number_input("Short EMA Window", min_value=1, max_value=100, value=50)
-    long_window = st.sidebar.number_input("Long EMA Window", min_value=1, max_value=365, value=200)
+    # Distribute metrics across columns
+    for i, col in enumerate([col1, col2, col3]):
+        for key, value in zip(keys[i::3], values[i::3]):  
+            if isinstance(value, (int, float)): 
+                formatted_value = (
+                    f"{value:.2%}" if 'Return' in key or key == 'Volatility' else f"{value:.2f}"
+                )
+            else:
+                formatted_value = "N/A" 
 
-    price_data = fetch_nifty_data(years)
-
-    if not price_data.empty:
-        strategy = Strategies(price_data, long_sma=long_window, short_sma=short_window, initial_capital=initial_capital, transaction_cost=transaction_cost)
-        strategy.run_strategy()
-
-        st.plotly_chart(strategy.plot_results(), use_container_width=True)
-
-        if st.button("Evaluate Strategy"):
-            performance = strategy.evaluate_performance()
-            for key, value in performance.items():
-                st.metric(key, f"{value:.2%}" if 'Return' in key or key == 'Volatility' else f"{value:.2f}")
+            col.metric(key, formatted_value)
 
 if __name__ == "__main__":
     main()
